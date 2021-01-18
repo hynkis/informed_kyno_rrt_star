@@ -47,10 +47,6 @@ except ImportError:
 
 rospack = rospkg.RosPack()
 
-TRAJECTORY_DATA_PATH = rospack.get_path('informed_kyno_rrt_star')+'/data/world_3'
-SAVE_DATA = False
-DATA_I = 0
-
 # ============================ #
 # ----- Global functions ----- #
 # ============================ #
@@ -134,6 +130,7 @@ class ReedsSheppRRTStar(Plot_utils):
 
         # Subscriber
         self.sub_map = rospy.Subscriber("map", OccupancyGrid, self.callback_map)
+        # self.sub_map = rospy.Subscriber("/semantics/costmap_generator/occupancy_grid", OccupancyGrid, self.callback_map)
         self.sub_init_pose = rospy.Subscriber("initialpose", PoseWithCovarianceStamped, self.callback_init_pose)
         self.sub_goal_pose = rospy.Subscriber("move_base_simple/goal", PoseStamped, self.callback_goal_pose)
         # Publisher
@@ -173,7 +170,6 @@ class ReedsSheppRRTStar(Plot_utils):
     
     def callback_map(self, msg_map):
         self.map = msg_map
-        print("subscribe map")
     
     def callback_init_pose(self, msg_pose):
         self.startNode.x = msg_pose.pose.pose.position.x
@@ -226,9 +222,6 @@ class ReedsSheppRRTStar(Plot_utils):
         rewire_cnt  = 0
         solutionSet = set()
         path        = None
-
-        # for saving data
-        global DATA_I
 
         # Compute the sampling space (Ellipsoid region)
         # - min cost == Min distance from start to goal
@@ -308,14 +301,6 @@ class ReedsSheppRRTStar(Plot_utils):
                                     else:
                                         np_data = np.vstack([np_data, np_data_array])
 
-                            # - save as npz
-                            if SAVE_DATA:
-                                trajectory_data_path = TRAJECTORY_DATA_PATH + '_' + str(DATA_I) + '.csv'
-                                dataframe = pd.DataFrame(np_data)
-                                dataframe.to_csv(trajectory_data_path, header=False, index=False)
-                                print("Save done! cost, time :", path_cost, path_time)
-                                DATA_I += 1
-
                         # self.publish_final_reeds_shepp_path(final_path)
                         self.publish_final_reeds_shepp_path_posearray(final_path)
                         # return final_path
@@ -333,7 +318,6 @@ class ReedsSheppRRTStar(Plot_utils):
             # print("For loop time :", time.time() - tic_for)
             if rewire_cnt > self.max_rewire_num:
                 print("DONE!!!")
-                time.sleep(3)
                 break
 
 
@@ -585,15 +569,11 @@ class ReedsSheppRRTStar(Plot_utils):
         Backpropagate solution path
         Path is the list of Node
         """
-        # path = [self.goalNode]
         path = []
-        point_xy = []
         while node.parent is not None:
             path.append(node)
-            point_xy.append(("pt", (node.x, node.y), "last_point", (node.path_x[-1], node.path_y[-1]), "init_point", (node.path_x[0], node.path_y[0])))
             node = node.parent
         path.append(self.startNode)
-        point_xy.append((self.startNode.x, self.startNode.y))
 
         return path
         
@@ -660,7 +640,7 @@ class ReedsSheppRRTStar(Plot_utils):
 
         # Publish wpt as MarkerArray
         msg_point = Marker()
-        msg_point.header.frame_id= "/map"
+        msg_point.header.frame_id= "/map" #"/base_link" #"/map"
         msg_point.header.stamp= rospy.Time.now()
         msg_point.ns= "spheres"
         msg_point.action= Marker.ADD
@@ -697,7 +677,7 @@ class ReedsSheppRRTStar(Plot_utils):
         msg_tree = MarkerArray()
         # Point
         msg_point = Marker()
-        msg_point.header.frame_id= "/map"
+        msg_point.header.frame_id= "/map" #"/base_link" #"/map"
         msg_point.header.stamp= rospy.Time.now()
         msg_point.ns= "spheres"
         msg_point.action= Marker.ADD
@@ -787,7 +767,7 @@ class ReedsSheppRRTStar(Plot_utils):
         py = np.array(fx[1, :] + cy).flatten()
 
         ellipse = Marker()
-        ellipse.header.frame_id = "map"
+        ellipse.header.frame_id = "/map" # "/base_link" "/map"
         ellipse.header.stamp = rospy.get_rostime()
         ellipse.ns = "markers"
         ellipse.id = 1
@@ -815,7 +795,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_reeds_shepp_path(self, node_list):
         # Publish wpt as MarkerArray
         msg_reeds = Marker()
-        msg_reeds.header.frame_id= "/map"
+        msg_reeds.header.frame_id= "/map" #"/base_link" #"/map"
         msg_reeds.header.stamp= rospy.Time.now()
         msg_reeds.ns= "spheres"
         msg_reeds.action= Marker.ADD
@@ -850,7 +830,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_reeds_shepp_path_posearray(self, node_list):
         # Publish wpt as PoseArray
         msg_reeds = PoseArray()
-        msg_reeds.header.frame_id = "/map"
+        msg_reeds.header.frame_id = "/map" #"/base_link" #"/map"
         msg_reeds.header.stamp = rospy.Time.now()
 
         for node in node_list:
@@ -871,7 +851,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_final_reeds_shepp_path(self, path):
         # Publish wpt as MarkerArray
         msg_reeds = Marker()
-        msg_reeds.header.frame_id= "/map"
+        msg_reeds.header.frame_id= "/map" #"/base_link" # "/map"
         msg_reeds.header.stamp= rospy.Time.now()
         msg_reeds.ns= "spheres"
         msg_reeds.action= Marker.ADD
@@ -906,7 +886,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_final_reeds_shepp_path_posearray(self, path):
         # Publish final reeds_shepp as PoseArray
         msg_final_reeds = PoseArray()
-        msg_final_reeds.header.frame_id = "/map"
+        msg_final_reeds.header.frame_id = "/map" #"/base_link" # "/map"
         msg_final_reeds.header.stamp = rospy.Time.now()
 
         for node in path:
@@ -927,21 +907,24 @@ class ReedsSheppRRTStar(Plot_utils):
 def main():
     print("Start informed rrt star planning")
     start = [0.0, 0.0, np.deg2rad(0)]
-    # goal  = [5.4, 3.2, np.deg2rad(90)]
-    # goal  = [7.4, 3.1, np.deg2rad(90)] # world 1
     goal  = [7.4, 5.5, np.deg2rad(-90)] # world 2 (e_shape)
-    # goal  = [7.4, 2.3, np.deg2rad(0)] # world 3 (vertical)
     randArea = [-3, 10]
     
     # Car params
     wheelbase             = 0.335
-    steer_limit           = np.deg2rad(30)
-    curvature_limit       = wheelbase / math.tan(steer_limit)
+    steer_limit           = np.deg2rad(30) # np.deg2rad(30)
+    curvature_limit       = math.tan(steer_limit) / wheelbase
     # Reeds Shepp params
     reeds_shepp_step_size = 0.1 # 0.15
 
-    agent = ReedsSheppRRTStar(start=start, goal=goal, randArea=randArea, eta=0.5, max_rewire_num=50, car_radius=0.25,
-                            curvature_limit=curvature_limit, reeds_shepp_step_size=reeds_shepp_step_size)
+    agent = ReedsSheppRRTStar(start=start,
+                              goal=goal,
+                              randArea=randArea,
+                              eta=0.5,
+                              max_rewire_num=10, #50,
+                              car_radius=0.25,
+                              curvature_limit=curvature_limit,
+                              reeds_shepp_step_size=reeds_shepp_step_size)
         
     while not rospy.is_shutdown():
         agent.rate.sleep()
