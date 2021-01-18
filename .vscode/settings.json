@@ -1,0 +1,9 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/usrg/catkin_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages",
+        "/home/usrg/carla/PythonAPI/carla/dist/carla-0.9.9-py2.7-linux-x86_64.egg",
+        "/home/usrg/mbzirc/models/research",
+        "/home/usrg/mbzirc/models/research/slim"
+    ]
+}
