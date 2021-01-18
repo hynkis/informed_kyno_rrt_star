@@ -93,11 +93,12 @@ class Node:
         self.parent = None # Node, not index
 
 class ReedsSheppRRTStar(Plot_utils):
-    def __init__(self, start, goal, randArea, eta, max_rewire_num, car_radius, curvature_limit, reeds_shepp_step_size):
+    def __init__(self, start, goal, rand_range_x, rand_range_y, eta, max_rewire_num, car_radius, curvature_limit, reeds_shepp_step_size):
         """
             - start    : [start x, y]
             - goal     : [goal x, y]
-            - randArea : [min_pose, max_pose]
+            - rand_range_x : [min_y, max_x]
+            - rand_range_y : [min_y, max_x]
         """
         # ROS init
         rospy.init_node('informed_rrt_star')
@@ -115,8 +116,10 @@ class ReedsSheppRRTStar(Plot_utils):
         self.max_rewire_num = max_rewire_num
         self.goal_sample_rate = 0 # % of sampling goal point directly
 
-        self.min_rand = randArea[0] # min random value
-        self.max_rand = randArea[1] # max random value
+        self.min_rand_x = rand_range_x[0] # min random value x
+        self.max_rand_x = rand_range_x[1] # max random value x
+        self.min_rand_y = rand_range_y[0] # min random value y
+        self.max_rand_y = rand_range_y[1] # max random value y
 
         # RRT*
         self.near_radius = 50.0
@@ -437,10 +440,8 @@ class ReedsSheppRRTStar(Plot_utils):
         """
         # Sampling nodes (10% at the Goal point / 90% at the Random point)
         if random.randint(0, 100) > self.goal_sample_rate:
-            # rnd = [random.uniform(self.min_rand, self.max_rand),
-            #        random.uniform(self.min_rand, self.max_rand)]
-            rnd = Node(random.uniform(self.min_rand, self.max_rand),
-                       random.uniform(self.min_rand, self.max_rand),
+            rnd = Node(random.uniform(self.min_rand_x, self.max_rand_x),
+                       random.uniform(self.min_rand_y, self.max_rand_y),
                        random.uniform(-math.pi, math.pi)
                        )
         else:
@@ -908,7 +909,8 @@ def main():
     print("Start informed rrt star planning")
     start = [0.0, 0.0, np.deg2rad(0)]
     goal  = [7.4, 5.5, np.deg2rad(-90)] # world 2 (e_shape)
-    randArea = [-3, 10]
+    rand_range_x = [-3, 10]
+    rand_range_y = [-3, 10]
     
     # Car params
     wheelbase             = 0.335
@@ -919,7 +921,8 @@ def main():
 
     agent = ReedsSheppRRTStar(start=start,
                               goal=goal,
-                              randArea=randArea,
+                              rand_range_x = rand_range_x,
+                              rand_range_y = rand_range_y,
                               eta=0.5,
                               max_rewire_num=10, #50,
                               car_radius=0.25,

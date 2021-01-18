@@ -8,6 +8,6 @@
   <node name="RT_RRT" pkg="informed_kyno_rrt_star" type="ros_node_kino.py" respawn="true" output="screen" cwd="node" />
 
   <!-- Rviz -->
- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find informed_kyno_rrt_star)/config/rviz/rt_rrt.rviz" />
+ <node type="rviz" name="rviz" pkg="rviz" args="-d $(find informed_kyno_rrt_star)/config/rviz/informed_kyno_rrt_star.rviz" />
 
 </launch>
