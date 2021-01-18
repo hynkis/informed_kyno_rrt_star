@@ -8,14 +8,6 @@ Reference: Informed RRT*: Optimal Sampling-based Path planning Focused via
 Direct Sampling of an Admissible Ellipsoidal Heuristic
 https://arxiv.org/pdf/1404.2334.pdf
 
-@ Map size
-    - x : [-0.3 ~ 9.0]
-    - y : [-2.0 ~ 7.0]
-@ Start point
-    - [0, 0]
-@ Goal point
-    - [2.34, 3.11]
-
 """
 
 import time
@@ -45,7 +37,8 @@ try:
 except ImportError:
     raise
 
-rospack = rospkg.RosPack()
+# Global parameter
+DEBUG_GRID_MAP = False
 
 # ============================ #
 # ----- Global functions ----- #
@@ -122,7 +115,7 @@ class ReedsSheppRRTStar(Plot_utils):
         self.max_rand_y = rand_range_y[1] # max random value y
 
         # RRT*
-        self.near_radius = 50.0
+        self.near_radius = 100.0
         self.eta = eta  # expand distance
         # Reeds Shepp
         self.curvature_limit       = curvature_limit
@@ -132,8 +125,8 @@ class ReedsSheppRRTStar(Plot_utils):
         self.goal_xy_thres  = 0.5
 
         # Subscriber
-        self.sub_map = rospy.Subscriber("map", OccupancyGrid, self.callback_map)
-        # self.sub_map = rospy.Subscriber("/semantics/costmap_generator/occupancy_grid", OccupancyGrid, self.callback_map)
+        # self.sub_map = rospy.Subscriber("map", OccupancyGrid, self.callback_map)
+        self.sub_map = rospy.Subscriber("/semantics/costmap_generator/occupancy_grid", OccupancyGrid, self.callback_map)
         self.sub_init_pose = rospy.Subscriber("initialpose", PoseWithCovarianceStamped, self.callback_init_pose)
         self.sub_goal_pose = rospy.Subscriber("move_base_simple/goal", PoseStamped, self.callback_goal_pose)
         # Publisher
@@ -144,8 +137,6 @@ class ReedsSheppRRTStar(Plot_utils):
         self.pub_node  = rospy.Publisher('/visual/node', Marker, queue_size=10)
         
         self.pub_tree = rospy.Publisher('/visual/tree', MarkerArray, queue_size=10)
-        # self.pub_reeds = rospy.Publisher('/visual/reeds', Marker, queue_size=10)
-        # self.pub_final_reeds = rospy.Publisher('/visual/final_reeds', Marker, queue_size=10)
         self.pub_reeds = rospy.Publisher('/visual/reeds', PoseArray, queue_size=10)
         self.pub_final_reeds = rospy.Publisher('/visual/final_reeds', PoseArray, queue_size=10)
         self.pub_ellipse = rospy.Publisher('/visual/ellipse', Marker, queue_size = 1)
@@ -154,13 +145,23 @@ class ReedsSheppRRTStar(Plot_utils):
         # - Initialize map
         while self.map is None:
             # Wait until map is initialized
-            print("wait map")
             continue
-        self.grid           = np.reshape(np.array(self.map.data), (self.map.info.width, self.map.info.height))
+        # self.grid           = np.reshape(np.array(self.map.data), (self.map.info.width, self.map.info.height))
+        self.grid           = np.reshape(np.array(self.map.data), (self.map.info.height, self.map.info.width))
+        # self.grid           = self.grid[::-1] # vertical flip for matching occupancy grid in sim with np.array
         self.map_resolution = self.map.info.resolution
         self.origin         = self.map.info.origin
+        self.origin.position.x = -5   # x of the most left bottom point
+        self.origin.position.y = -15  # y of the most left bottom point
         print("Origin :", self.origin)
-
+        print("map_resolution :", self.map_resolution)
+        print("self.map.data : ", np.array(self.map.data).shape)
+        print("self.grid     : ", self.grid.shape)
+        # for debug
+        if DEBUG_GRID_MAP:
+            plt.imshow(self.grid, cmap='hot', interpolation='nearest')
+            plt.show()
+        
         # Car
         self.car_radius = car_radius
         self.car_volume_X, self.car_volume_Y = np.ogrid[-round(self.car_radius/self.map_resolution):round(self.car_radius/self.map_resolution)+1,
@@ -199,6 +200,7 @@ class ReedsSheppRRTStar(Plot_utils):
         """ 
         x_ind = int((x-self.origin.position.x) // self.map_resolution)
         y_ind = int((y-self.origin.position.y) // self.map_resolution)
+
         # x, y are flipped in map_value
         return y_ind, x_ind
 
@@ -320,9 +322,8 @@ class ReedsSheppRRTStar(Plot_utils):
 
             # print("For loop time :", time.time() - tic_for)
             if rewire_cnt > self.max_rewire_num:
-                print("DONE!!!")
+                print("Done!!!")
                 break
-
 
         return path
 
@@ -502,7 +503,7 @@ class ReedsSheppRRTStar(Plot_utils):
             return newNode
 
         min_ind  = near_inds[costs.index(min_cost)]
-        min_cost_tNode = tNode_list[min_ind]
+        # min_cost_tNode = tNode_list[min_ind]
         # Wiring min cost node with newNode as parent 
         newNode = self.steer(self.node_list[min_ind], newNode) # updated parent in steer.
         # newNode.parent = self.node_list[min_ind]
@@ -577,20 +578,6 @@ class ReedsSheppRRTStar(Plot_utils):
         path.append(self.startNode)
 
         return path
-        
-    # def get_final_path(self, last_ind):
-    #     """
-    #     Backpropagate solution path
-    #     Path is the list of Node
-    #     """
-    #     path = [self.goalNode]
-    #     while self.node_list[last_ind].parent is not None:
-    #         node = self.node_list[last_ind]
-    #         path.append(node)
-    #         last_ind = node.parent
-    #     path.append(self.startNode)
-
-    #     return path
 
     def get_path_len(self, path):
         path_len = 0
@@ -613,9 +600,22 @@ class ReedsSheppRRTStar(Plot_utils):
             # Get grid value
             # - centerline
             center_ix, center_iy = self.get_map_index(center_x, center_y)
+
+            # - if index is negative, the center point is outside of the local map.
+            if center_ix < 0 or center_iy < 0:
+                # print("center_xy is outside.")
+                return False # outside
+
+            # - if index in car volume is larger than grid array size,
+            #       it is outside of the localmap.
+            if (center_ix+self.car_volume_X >= self.grid.shape[0]).any() or \
+                (center_iy+self.car_volume_Y >= self.grid.shape[1]).any():
+                # print("volume XY is outside.")
+                return False # outside
+
+            # - if the grid value is not 0, it is collision point.
             res = self.grid[center_ix + self.car_volume_X, center_iy + self.car_volume_Y] # 0: free | -1, 100: collision
             if res.any() == True:
-                # print("Collision :", ix, iy, self.grid[ix, iy])
                 return False # collision
 
         return True
@@ -641,7 +641,7 @@ class ReedsSheppRRTStar(Plot_utils):
 
         # Publish wpt as MarkerArray
         msg_point = Marker()
-        msg_point.header.frame_id= "/map" #"/base_link" #"/map"
+        msg_point.header.frame_id= "/base_link" #"/map"
         msg_point.header.stamp= rospy.Time.now()
         msg_point.ns= "spheres"
         msg_point.action= Marker.ADD
@@ -678,7 +678,7 @@ class ReedsSheppRRTStar(Plot_utils):
         msg_tree = MarkerArray()
         # Point
         msg_point = Marker()
-        msg_point.header.frame_id= "/map" #"/base_link" #"/map"
+        msg_point.header.frame_id="/base_link" #"/map"
         msg_point.header.stamp= rospy.Time.now()
         msg_point.ns= "spheres"
         msg_point.action= Marker.ADD
@@ -768,7 +768,7 @@ class ReedsSheppRRTStar(Plot_utils):
         py = np.array(fx[1, :] + cy).flatten()
 
         ellipse = Marker()
-        ellipse.header.frame_id = "/map" # "/base_link" "/map"
+        ellipse.header.frame_id = "/base_link" #"/map"
         ellipse.header.stamp = rospy.get_rostime()
         ellipse.ns = "markers"
         ellipse.id = 1
@@ -796,7 +796,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_reeds_shepp_path(self, node_list):
         # Publish wpt as MarkerArray
         msg_reeds = Marker()
-        msg_reeds.header.frame_id= "/map" #"/base_link" #"/map"
+        msg_reeds.header.frame_id= "/base_link" #"/base_link" #"/map"
         msg_reeds.header.stamp= rospy.Time.now()
         msg_reeds.ns= "spheres"
         msg_reeds.action= Marker.ADD
@@ -831,7 +831,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_reeds_shepp_path_posearray(self, node_list):
         # Publish wpt as PoseArray
         msg_reeds = PoseArray()
-        msg_reeds.header.frame_id = "/map" #"/base_link" #"/map"
+        msg_reeds.header.frame_id = "/base_link" #"/map"
         msg_reeds.header.stamp = rospy.Time.now()
 
         for node in node_list:
@@ -852,7 +852,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_final_reeds_shepp_path(self, path):
         # Publish wpt as MarkerArray
         msg_reeds = Marker()
-        msg_reeds.header.frame_id= "/map" #"/base_link" # "/map"
+        msg_reeds.header.frame_id= "/base_link" # "/map"
         msg_reeds.header.stamp= rospy.Time.now()
         msg_reeds.ns= "spheres"
         msg_reeds.action= Marker.ADD
@@ -887,7 +887,7 @@ class ReedsSheppRRTStar(Plot_utils):
     def publish_final_reeds_shepp_path_posearray(self, path):
         # Publish final reeds_shepp as PoseArray
         msg_final_reeds = PoseArray()
-        msg_final_reeds.header.frame_id = "/map" #"/base_link" # "/map"
+        msg_final_reeds.header.frame_id = "/base_link" # "/map"
         msg_final_reeds.header.stamp = rospy.Time.now()
 
         for node in path:
@@ -907,25 +907,26 @@ class ReedsSheppRRTStar(Plot_utils):
 
 def main():
     print("Start informed rrt star planning")
+    # start = [0.0, 0.0, np.deg2rad(0)]
     start = [0.0, 0.0, np.deg2rad(0)]
     goal  = [7.4, 5.5, np.deg2rad(-90)] # world 2 (e_shape)
-    rand_range_x = [-3, 10]
-    rand_range_y = [-3, 10]
+    rand_range_x = [-4, 40]
+    rand_range_y = [-14, 14]
     
     # Car params
-    wheelbase             = 0.335
-    steer_limit           = np.deg2rad(30) # np.deg2rad(30)
+    wheelbase             = 2.7 #0.335
+    steer_limit           = np.deg2rad(15) # np.deg2rad(30)
     curvature_limit       = math.tan(steer_limit) / wheelbase
     # Reeds Shepp params
-    reeds_shepp_step_size = 0.1 # 0.15
+    reeds_shepp_step_size = 1. #0.5 # 0.1 # 0.15
 
     agent = ReedsSheppRRTStar(start=start,
                               goal=goal,
                               rand_range_x = rand_range_x,
                               rand_range_y = rand_range_y,
-                              eta=0.5,
-                              max_rewire_num=10, #50,
-                              car_radius=0.25,
+                              eta= 1., #0.5,  # eta has no effect as it is reeds shepp-based planner.
+                              max_rewire_num=30, #50,
+                              car_radius=1.0,  # 0.25,
                               curvature_limit=curvature_limit,
                               reeds_shepp_step_size=reeds_shepp_step_size)
         
