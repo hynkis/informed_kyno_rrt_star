@@ -1,50 +1,55 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "",
-        "limitSymbolsToIncludedHeaders": true
-      },
-      "includePath": [
-        "/home/usrg/catkin_ws/devel/include/**",
-        "/opt/ros/melodic/include/**",
-        "/home/usrg/catkin_ws/src/acc_target_assigner/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/amathutils_lib/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/canopen_402/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/canopen_chain_node/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/canopen_master/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/canopen_motor_node/include/**",
-        "/home/usrg/catkin_ws/src/vision_opencv/cv_bridge/include/**",
-        "/home/usrg/catkin_ws/src/darknet_ros/darknet_ros/include/**",
-        "/home/usrg/catkin_ws/src/ddynamic_reconfigure/include/**",
-        "/home/usrg/catkin_ws/src/image_pipeline/depth_image_proc/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/ekf_localizer/include/**",
-        "/home/usrg/catkin_ws/src/veloster/eurecar_lcm_to_ros_publisher/include/**",
-        "/home/usrg/catkin_ws/src/vision_opencv/image_geometry/include/**",
-        "/home/usrg/catkin_ws/src/image_pipeline/image_proc/include/**",
-        "/home/usrg/catkin_ws/src/messages/jetson_msgs/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/lanelet2_extension/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/map_file/include/**",
-        "/home/usrg/catkin_ws/src/myahrs_driver/include/**",
-        "/home/usrg/catkin_ws/src/ocam_ros/include/**",
-        "/home/usrg/catkin_ws/src/pointcloud_to_laserscan/include/**",
-        "/home/usrg/catkin_ws/src/realsense-ros/realsense2_camera/include/**",
-        "/home/usrg/catkin_ws/src/ros_tutorial/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/socketcan_bridge/include/**",
-        "/home/usrg/catkin_ws/src/ros_canopen/socketcan_interface/include/**",
-        "/home/usrg/catkin_ws/src/image_pipeline/stereo_image_proc/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/tram_odom/include/**",
-        "/home/usrg/catkin_ws/src/ugv_indoor_driving/include/**",
-        "/home/usrg/catkin_ws/src/usb_cam/include/**",
-        "/home/usrg/catkin_ws/src/see3cam/include/**",
-        "/home/usrg/catkin_ws/src/autoware_pkgs_common/vector_map/include/**",
-        "/home/usrg/catkin_ws/src/velodyne/velodyne_driver/include/**",
-        "/home/usrg/catkin_ws/src/velodyne/velodyne_laserscan/include/**",
-        "/home/usrg/catkin_ws/src/velodyne/velodyne_pointcloud/include/**",
-        "/home/usrg/catkin_ws/src/vision_msgs/include/**",
-        "/usr/include/**"
-      ],
-      "name": "ROS"
-    }
-  ]
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/usrg/catkin_ws/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/usrg/catkin_ws/src/acc_target_assigner/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/amathutils_lib/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/canopen_402/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/canopen_chain_node/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/canopen_master/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/canopen_motor_node/include/**",
+                "/home/usrg/catkin_ws/src/vision_opencv/cv_bridge/include/**",
+                "/home/usrg/catkin_ws/src/darknet_ros/darknet_ros/include/**",
+                "/home/usrg/catkin_ws/src/ddynamic_reconfigure/include/**",
+                "/home/usrg/catkin_ws/src/image_pipeline/depth_image_proc/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/ekf_localizer/include/**",
+                "/home/usrg/catkin_ws/src/veloster/eurecar_lcm_to_ros_publisher/include/**",
+                "/home/usrg/catkin_ws/src/vision_opencv/image_geometry/include/**",
+                "/home/usrg/catkin_ws/src/image_pipeline/image_proc/include/**",
+                "/home/usrg/catkin_ws/src/messages/jetson_msgs/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/lanelet2_extension/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/map_file/include/**",
+                "/home/usrg/catkin_ws/src/myahrs_driver/include/**",
+                "/home/usrg/catkin_ws/src/ocam_ros/include/**",
+                "/home/usrg/catkin_ws/src/pointcloud_to_laserscan/include/**",
+                "/home/usrg/catkin_ws/src/realsense-ros/realsense2_camera/include/**",
+                "/home/usrg/catkin_ws/src/ros_tutorial/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/socketcan_bridge/include/**",
+                "/home/usrg/catkin_ws/src/ros_canopen/socketcan_interface/include/**",
+                "/home/usrg/catkin_ws/src/image_pipeline/stereo_image_proc/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/tram_odom/include/**",
+                "/home/usrg/catkin_ws/src/ugv_indoor_driving/include/**",
+                "/home/usrg/catkin_ws/src/usb_cam/include/**",
+                "/home/usrg/catkin_ws/src/see3cam/include/**",
+                "/home/usrg/catkin_ws/src/autoware_pkgs_common/vector_map/include/**",
+                "/home/usrg/catkin_ws/src/velodyne/velodyne_driver/include/**",
+                "/home/usrg/catkin_ws/src/velodyne/velodyne_laserscan/include/**",
+                "/home/usrg/catkin_ws/src/velodyne/velodyne_pointcloud/include/**",
+                "/home/usrg/catkin_ws/src/vision_msgs/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
 }

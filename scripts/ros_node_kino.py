@@ -924,7 +924,7 @@ def main():
                               rand_range_x = rand_range_x,
                               rand_range_y = rand_range_y,
                               eta=0.5,
-                              max_rewire_num=10, #50,
+                              max_rewire_num=30, #50,
                               car_radius=0.25,
                               curvature_limit=curvature_limit,
                               reeds_shepp_step_size=reeds_shepp_step_size)
